@@ -23,13 +23,19 @@ interface DataState {
   friends: {
     [key: string]: FriendState;
   };
-  friendRequests: Array<FriendRequestState>;
+  friendRequests: {
+    [id: string]: FriendRequestState;
+  };
+  myFriendRequestOrder: Array<FriendRequestState>;
+  mySentFriendRequestOrder: Array<FriendRequestState>;
   userEmail: string;
 }
 
 const initialState: DataState = {
   friends: {},
-  friendRequests: [],
+  friendRequests: {},
+  myFriendRequestOrder: [],
+  mySentFriendRequestOrder: [],
   userEmail: "",
 };
 
@@ -52,6 +58,8 @@ const reducer: Reducer<DataState, Action> = produce(
       }
       case ActionTypes.GET_FRIENDS: {
         const { friends } = action.payload;
+        console.log("Friends payload");
+        console.log(friends);
         friends.forEach((friend) => {
           state.friends[friend.email].firstName = friend.firstName;
           state.friends[friend.email].lastName = friend.lastName;
@@ -61,14 +69,30 @@ const reducer: Reducer<DataState, Action> = produce(
       }
       case ActionTypes.GET_FRIEND: {
         const { firstName, lastName, email } = action.payload;
-        state.friends[email].firstName = firstName;
-        state.friends[email].lastName = lastName;
-        state.friends[email].loading = false;
+        if (!state.friends[email]) {
+          state.friends[email] = {
+            firstName,
+            lastName,
+            email,
+            messages: [],
+            loading: false,
+          };
+        } else {
+          state.friends[email].firstName = firstName;
+          state.friends[email].lastName = lastName;
+          state.friends[email].loading = false;
+        }
         return state;
       }
       case ActionTypes.SEND_FRIEND_REQUEST: {
         const { id, recipient, sender, status } = action.payload;
-        state.friendRequests.push({
+        state.friendRequests[id] = {
+          id,
+          recipient,
+          sender,
+          status,
+        };
+        state.mySentFriendRequestOrder.push({
           id,
           recipient,
           sender,
@@ -140,6 +164,33 @@ const reducer: Reducer<DataState, Action> = produce(
       }
       case ActionTypes.LOG_OUT: {
         state = initialState;
+        return state;
+      }
+      case ActionTypes.GET_FRIEND_REQUESTS: {
+        const { friendRequests } = action.payload;
+        friendRequests.forEach((request) => {
+          if (!state.friendRequests[request.id]) {
+            state.friendRequests[request.id] = request;
+            if (request.sender === state.userEmail) {
+              state.mySentFriendRequestOrder.push(request);
+            } else {
+              state.myFriendRequestOrder.push(request);
+            }
+          }
+        });
+        return state;
+      }
+      case ActionTypes.ACCEPT_FRIEND_REQUEST: {
+        const { id, recipient, sender, status } = action.payload;
+        delete state.friendRequests[id];
+        const ind = state.myFriendRequestOrder.findIndex(
+          (request) => request.id === id
+        );
+        console.log("ind to delete ", ind);
+        if (ind !== -1) {
+          state.myFriendRequestOrder.splice(ind, 1);
+        }
+
         return state;
       }
     }

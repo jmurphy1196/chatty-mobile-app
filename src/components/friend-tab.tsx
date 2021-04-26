@@ -11,7 +11,6 @@ interface FriendTabProps {
 
 const FriendTab: React.FC<FriendTabProps> = ({ email, onPress }) => {
   const friend = useTypedSelector((state) => state.data.friends[email]);
-  console.log(friend);
   return (
     <View>
       <Block>

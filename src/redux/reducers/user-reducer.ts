@@ -53,6 +53,16 @@ const reducer: Reducer<UserState, Action> = produce(
         state = initialState;
         return state;
       }
+      case ActionTypes.GET_FRIEND: {
+        const { email } = action.payload;
+        const existingFriend = state.friends.findIndex(
+          (friend) => friend === email
+        );
+        if (existingFriend === -1) {
+          state.friends.push(email);
+        }
+        return state;
+      }
       default:
         return state;
     }

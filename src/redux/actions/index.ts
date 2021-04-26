@@ -1,5 +1,6 @@
 import { ActionTypes } from "../action-types";
 import { ChatData } from "../../socket-service";
+import { FriendRequestState } from "../reducers/data-reducer";
 
 interface FriendData {
   email: string;
@@ -124,7 +125,25 @@ export interface MessageSent {
 
 export interface GetFriendRequests {
   type: ActionTypes.GET_FRIEND_REQUESTS;
-  payload: {};
+  payload: {
+    friendRequests: Array<FriendRequestState>;
+  };
+}
+
+export interface AcceptFriendRequest {
+  type: ActionTypes.ACCEPT_FRIEND_REQUEST;
+  payload: {
+    id: string;
+    sender: string;
+    status: "confirmed";
+    recipient: string;
+  };
+}
+export interface DenyFriendRequest {
+  type: ActionTypes.DENY_FRIEND_REQUEST;
+  payload: {
+    friendRequest: FriendRequestState;
+  };
 }
 
 export type Action =
@@ -143,4 +162,6 @@ export type Action =
   | MessageSent
   | ResetFetchMessages
   | Logout
-  | GetFriendRequests;
+  | GetFriendRequests
+  | DenyFriendRequest
+  | AcceptFriendRequest;

@@ -17,4 +17,6 @@ export enum ActionTypes {
   MESSAGE_SENT = "message_sent",
   RESET_FETCH_MESSAGE = "reset_fetch_message",
   GET_FRIEND_REQUESTS = "get_friend_requests",
+  ACCEPT_FRIEND_REQUEST = "accept_friend_request",
+  DENY_FRIEND_REQUEST = "deny_friend_request",
 }

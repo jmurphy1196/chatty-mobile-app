@@ -72,6 +72,7 @@ export const signup = (
       console.log("THIS IS THE DATA FOR SIGNUP");
       console.log(data);
       if (data.token) {
+        axios.defaults.headers.Authorization = `Bearer ${data.token}`;
         await storeData("token", data.token);
         const { email, id, firstName, friends, lastName } = data.user;
         dispatch({
@@ -108,7 +109,7 @@ export const getUser = (token: string) => {
             firstName: data.firstName,
             lastName: data.lastName,
             friends: data.friends,
-            id: data.id,
+            id: data.id || data._id,
             token: token,
           },
         });
@@ -136,6 +137,8 @@ export const logout = () => {
 };
 
 export const getFriends = (friends: string[]) => {
+  console.log("getting friends");
+  console.log(friends);
   return async (dispatch: Dispatch<Action>) => {
     friends.forEach(async (friend) => {
       dispatch({
@@ -148,6 +151,8 @@ export const getFriends = (friends: string[]) => {
         const { data } = await axios.get(
           `${BASE_URL}/api/friend/user/${friend}`
         );
+        console.log("this is data from getting friend");
+        console.log(data);
         if (data.friend) {
           dispatch({
             type: ActionTypes.GET_FRIEND,
@@ -159,6 +164,7 @@ export const getFriends = (friends: string[]) => {
           });
         }
       } catch (e) {
+        console.log("error");
         console.log(e);
       }
     });
@@ -279,6 +285,64 @@ export const resetMessageFetch = () => {
   };
 };
 
+export const getFriendRequests = () => {
+  return async (dispatch: Dispatch<Action>) => {
+    try {
+      const { data } = await axios.get(
+        `${BASE_URL}/api/friend/friend-requests`
+      );
+      if (data) {
+        dispatch({
+          type: ActionTypes.GET_FRIEND_REQUESTS,
+          payload: {
+            friendRequests: data,
+          },
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+};
+
+export const acceptOrDenyFriendRequest = (
+  id: string,
+  action: "accept" | "deny"
+) => {
+  return async (dispatch: Dispatch<Action>) => {
+    try {
+      const { data } = await axios.post(
+        `${BASE_URL}/api/friend/action-friend-request/${id}`,
+        {
+          action,
+        }
+      );
+      if (data) {
+        if (action === "accept") {
+          dispatch({
+            type: ActionTypes.ACCEPT_FRIEND_REQUEST,
+            payload: {
+              id: data.id,
+              recipient: data.recipient,
+              sender: data.sender,
+              status: data.status,
+            },
+          });
+        } else {
+          //deny
+          dispatch({
+            type: ActionTypes.DENY_FRIEND_REQUEST,
+            payload: {
+              friendRequest: data,
+            },
+          });
+        }
+        return data.sender;
+      }
+    } catch (e) {}
+  };
+};
+
 export const actionCreators = {
   signin,
   getUser,
@@ -290,4 +354,6 @@ export const actionCreators = {
   getMessages,
   resetMessageFetch,
   logout,
+  getFriendRequests,
+  acceptOrDenyFriendRequest,
 };

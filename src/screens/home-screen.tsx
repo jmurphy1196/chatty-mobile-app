@@ -1,11 +1,5 @@
-import React, { Component, useEffect, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TouchableOpacityBase,
-} from "react-native";
+import React, { Component, useEffect, useState, useCallback } from "react";
+import { View, StyleSheet, ScrollView, RefreshControl } from "react-native";
 import { useActions } from "../hooks/use-actions";
 import { useTypedSelector } from "../hooks/use-typed-selector";
 import { Block, Text, Icon } from "galio-framework";
@@ -21,15 +15,26 @@ interface MainScreenProps {
   navigation: StackNavigationProp<RootStackParamList, "Main">;
 }
 
+const wait = (timeout: number) => {
+  return new Promise((resolve) => setTimeout(resolve, timeout));
+};
+
 const HomeScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   const [toggleAddFriend, setToggleAddFriend] = useState(false);
+  const [refresh, setRefresh] = useState(false);
   const fullName = useTypedSelector((state) =>
     capitalize(`${state.user.firstName} ${state.user.lastName}`)
   );
   const friends = useTypedSelector(({ user }) => user.friends);
   const { getFriends } = useActions();
+  const onRefresh = useCallback(() => {
+    getFriends(friends);
+    setRefresh(true);
+    wait(2000).then(() => setRefresh(false));
+  }, []);
 
   useEffect(() => {
+    console.log("GETTING FRIENDS");
     getFriends(friends);
   }, []);
 
@@ -45,7 +50,13 @@ const HomeScreen: React.FC<MainScreenProps> = ({ navigation }) => {
         }}
       />
       {toggleAddFriend && <AddFriend />}
-      <ScrollView scrollEnabled={true} style={styles.friendsTab}>
+      <ScrollView
+        scrollEnabled={true}
+        style={styles.friendsTab}
+        refreshControl={
+          <RefreshControl refreshing={refresh} onRefresh={onRefresh} />
+        }
+      >
         {friends.map((email) => {
           return (
             <FriendTab
